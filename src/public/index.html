@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interface de Gerenciamento de API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e4e2e2;
+            color: #000000;
+        }
+
+        .container {
+            width: 50%;
+            margin: 35px auto;
+            padding: 10px;
+            border-radius: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+        }
+
+        h1 {
+            color: #444;
+            text-align: center;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            background-color: #5caab8;
+            color: white;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #4c4eae;
+        }
+    </style>
+    <script>
+
+        // Função para enviar uma requisição PUT
+        function enviarPut(url, body, callback) {
+            fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+            .then(response => {
+                console.log('Status da Resposta:', response.status);
+                if (!response.ok) {
+                    throw new Error('Erro na rede ou resposta não-ok do servidor: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Dados Recebidos:', data);
+                callback(data);
+            })
+            .catch(error => {
+                console.error('Erro na requisição PUT:', error);
+                alert('Falha ao atualizar a categoria: ' + error.message);
+            });
+        }
+
+		// Função para enviar uma requisição DELETE
+        function enviarDelete(url, callback) {
+            fetch(url, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || `HTTP Erro! Status: ${response.status}`);
+                    });
+                }
+                return response.text();
+            })
+            .then(data => callback(data))
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro: ' + error.message);
+            });
+        }
+
+
+		// Capturar o evento de envio do formulário PUT da Categoria
+		function enviarFormularioPutCategoria(event) {
+            console.log("Formulário de atualização da categoria enviado"); // Adicione esta linha
+			event.preventDefault(); 
+
+			var id = document.getElementById("upCatId").value;
+			var newName = document.getElementById("upCatName").value;
+
+			var data = {
+				name: newName,
+				active: true 
+			};
+
+			enviarPut('http://localhost:8000/api/categories/' + id, data, function(response) {
+				console.log('Resposta da atualização:', response);
+				alert('Categoria atualizada com sucesso!');
+			});
+}
+
+
+		// Capturar o evento de envio do formulário DELETE da Categoria
+		function enviarFormularioDeleteCategoria(event) {
+			event.preventDefault();
+			var id = document.getElementById("delCatId").value;
+
+			enviarDelete('http://localhost:8000/api/categories/' + id, function(data) {
+				console.log('Categoria excluída:', data);
+				alert('Categoria excluída com sucesso!'); 
+			});
+		}
+        // Função para enviar uma requisição POST para criar uma nova marca
+        function enviarFormularioPostMarca(event) {
+            event.preventDefault();
+            var name = document.getElementById("newMarcaName").value;
+
+            fetch('http://localhost:8000/api/marcas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro na rede ou resposta não-ok do servidor: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Marca criada:', data);
+                alert('Marca criada com sucesso!');
+            })
+            .catch(error => {
+                console.error('Erro na requisição POST:', error);
+                alert('Falha ao criar a marca: ' + error.message);
+            });
+        }
+
+        // Função para enviar uma requisição PUT para atualizar uma marca
+        function enviarFormularioPutMarca(event) {
+            event.preventDefault();
+            var id = document.getElementById("upMarcaId").value;
+            var name = document.getElementById("upMarcaName").value;
+
+            enviarPut('/api/marcas/' + id, { name: name }, function(data) {
+                console.log('Marca atualizada:', data);
+                alert('Marca atualizada com sucesso!');
+            });
+        }
+
+        // Função para enviar uma requisição DELETE para excluir uma marca
+        function enviarFormularioDeleteMarca(event) {
+            event.preventDefault();
+            var id = document.getElementById("delMarcaId").value;
+
+            enviarDelete('/api/marcas/' + id, function(data) {
+                console.log('Marca excluída:', data);
+                alert('Marca excluída com sucesso!');
+            });
+        }
+
+        // Função para mostrar uma marca específica
+        function mostrarMarca(event) {
+            event.preventDefault();
+            var id = document.getElementById("getMarcaId").value;
+            window.location.href = 'http://localhost:8000/api/marcas/' + id;
+        }
+
+        // Funções para capturar eventos de envio dos formulários
+        function setupFormEventListeners() {
+            document.getElementById('showCategoryForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                var id = document.getElementById('getCatId').value;
+                window.location.href = 'http://localhost:8000/api/categories/' + id;
+            });
+
+            document.getElementById('formPutCategoria').addEventListener('submit', enviarFormularioPutCategoria);
+            document.getElementById('formDeleteCategoria').addEventListener('submit', enviarFormularioDeleteCategoria);
+            document.getElementById('formPutMarca').addEventListener('submit', enviarFormularioPutMarca);
+            document.getElementById('formDeleteMarca').addEventListener('submit', enviarFormularioDeleteMarca);
+            document.getElementById('showMarcaForm').addEventListener('submit', mostrarMarca);
+            document.getElementById('formPostMarca').addEventListener('submit', enviarFormularioPostMarca);
+        }
+
+        document.addEventListener('DOMContentLoaded', setupFormEventListeners);
+
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Categorias</h1>
+
+        <!-- Formulário para listar todas as categorias -->
+        <form action="http://localhost:8000/api/categories" method="get">
+            <input type="submit" value="Listar Categorias">
+        </form>
+
+        <!-- Formulário para mostrar uma categoria específica -->
+        <form id="showCategoryForm">
+            <label for="getCatId">ID da Categoria:</label>
+            <input type="text" id="getCatId" name="id">
+            <input type="submit" value="Mostrar Categoria">
+        </form>
+
+        <!-- Formulário para criar uma nova categoria -->
+        <form action="http://localhost:8000/api/categories" method="post">
+            <label for="newCatName">Nome da Categoria:</label>
+            <input type="text" id="newCatName" name="name">
+            <input type="submit" value="Criar Categoria">
+        </form>
+
+		<!-- Formulário para atualizar uma categoria específica -->
+		<form id="formPutCategoria" onsubmit="enviarFormularioPutCategoria(event)">
+			<label for="upCatId">ID da Categoria:</label>
+			<input type="text" id="upCatId" name="id"><br>
+			<label for="upCatName">Novo Nome da Categoria:</label>
+			<input type="text" id="upCatName" name="name">
+			<input type="submit" value="Atualizar Categoria">
+		</form>
+
+		<!-- Formulário para excluir uma categoria específica -->
+		<form id="formDeleteCategoria" onsubmit="enviarFormularioDeleteCategoria(event)">
+			<label for="delCatId">ID da Categoria:</label>
+			<input type="text" id="delCatId" name="id">
+			<input type="submit" value="Excluir Categoria">
+		</form>
+
+        <h1>Marcas</h1>
+
+        <!-- Formulário para listar todas as marcas -->
+        <form action="http://localhost:8000/api/marcas" method="get">
+            <input type="submit" value="Listar Marcas">
+        </form>
+
+        <!-- Formulário para mostrar uma marca específica -->
+        <form id="showMarcaForm">
+            <label for="getMarcaId">ID da Marca:</label>
+            <input type="text" id="getMarcaId" name="id">
+            <input type="submit" value="Mostrar Marca">
+        </form>
+
+        <!-- Formulário para criar uma nova marca -->
+        <form id="formPostMarca">
+            <label for="newMarcaName">Nome da Marca:</label>
+            <input type="text" id="newMarcaName" name="name">
+            <input type="submit" value="Criar Marca">
+        </form>
+
+        <!-- Formulário para atualizar uma marca específica -->
+        <form id="formPutMarca" onsubmit="enviarFormularioPutMarca(event)">
+            <label for="upMarcaId">ID da Marca:</label>
+            <input type="text" id="upMarcaId" name="id">
+            <label for="upMarcaName">Novo Nome da Marca:</label>
+            <input type="text" id="upMarcaName" name="name">
+            <input type="submit" value="Atualizar Marca">
+        </form>
+
+        <!-- Formulário para excluir uma marca específica -->
+        <form id="formDeleteMarca" onsubmit="enviarFormularioDeleteMarca(event)">
+            <label for="delMarcaId">ID da Marca:</label>
+            <input type="text" id="delMarcaId" name="id">
+            <input type="submit" value="Excluir Marca">
+        </form>
+    </div>
+</body>
+</html>
